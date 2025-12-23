@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: appnginx # deployment name
+  labels:
+    app: appnginx # label for service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: appnginx  # each pdo that will have this selector will be a part of this deployment definition
+  template:   # template of our pod
+    metadata:
+      labels:
+        app: appnginx
+    spec:
+      containers:
+      - name: appnginx
+        image: luciancibu/nginx-resume:1.0
+        ports:
+        - name: appnginx-port
+          containerPort: 80
