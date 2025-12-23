@@ -8,8 +8,8 @@ def get_connection():
     for _ in range(20):
         try:
             return pymysql.connect(
-                user="cvuser",
-                password="cvpass",
+                user="root",
+                password="rootpass",
                 host="mariadb",
                 port=3306,
                 database="cv",
