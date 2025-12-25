@@ -32,6 +32,32 @@ jobs:
           pip install -r requirements.txt
           pip install flake8 pylint==3.0.3 astroid==3.0.3
 
+      - name: Start services
+        run: docker compose up -d --build
+        working-directory: app
+
+      - name: Wait for Flask
+        run: |
+          for i in {1..20}; do
+            curl -s http://localhost:5000/view && exit 0
+            sleep 3
+          done
+          echo "Flask not reachable"
+          exit 1
+
+      - name: Run app test
+        run: |
+          pip install requests
+          python test_app.py
+        working-directory: app/flask
+        env:
+          TARGET_URL: http://localhost:5000/view
+
+      - name: Stop services
+        if: always()
+        run: docker compose up -d --build
+        working-directory: app
+    
       - name: flake8 (style check)
         run: flake8 .
 
@@ -50,7 +76,6 @@ jobs:
             -Dsonar.python.pylint.reportPaths=app/flask/pylint-report.txt
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
 
       - name: SonarCloud Quality Gate
         uses: SonarSource/sonarqube-quality-gate-action@v1
