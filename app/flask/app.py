@@ -6,64 +6,6 @@ from flask import Flask, request
 app = Flask(__name__)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 def get_connection():
     for _ in range(20):
         try:
