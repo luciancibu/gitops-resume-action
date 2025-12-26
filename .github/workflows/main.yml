@@ -6,9 +6,14 @@ on:
     paths:
       - app/flask/**
   workflow_dispatch:
+env:
+  AWS_REGION: us-east-2
+  ECR_REPO_FLASK: resume-flask
+  ECR_REPO_NGINX: resume-nginx
+  EKS_CLUSTER: resume-eks
 
 jobs:
-  Testing:
+  testing:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -70,3 +75,36 @@ jobs:
       #   uses: SonarSource/sonarqube-quality-gate-action@v1
       #   env:
       #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  build-and-publish:
+    needs: testing
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Code checkout
+        uses: actions/checkout@v4
+
+      - name: Set image tag
+        run: echo "TAG=${GITHUB_SHA::7}" >> $GITHUB_ENV
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build & push Flask
+        run: |
+          docker build -t ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPO_FLASK }}:$TAG app/flask
+          docker push ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPO_FLASK }}:$TAG
+
+      - name: Build & push Nginx
+        run: |
+          docker build -t ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPO_NGINX }}:$TAG app/nginx
+          docker push ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPO_NGINX }}:$TAG    
+
